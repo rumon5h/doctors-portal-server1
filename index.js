@@ -30,6 +30,32 @@ async function run() {
       res.send(services);
     });
 
+    app.get('/available', async (req, res) => {
+        
+        const date = req.query.date;
+        // step 1: get all the bookings
+        const services = await serviceCollection.find().toArray()
+
+        // step 2 : get the booking of the day
+        // const query = {data : req.query.data || 'Oct 31, 2022'}
+
+        const bookings = await bookingCollection.find({date}).toArray(); 
+
+        // step 3: for each service
+        services.forEach(service => {
+            // step 4: find the booking for that service
+            const serviceBooking = bookings.filter(book => book.treatment === service.name)
+            // step 5: Select slots for the service bookings
+           const bookedSlots = serviceBooking.map(book => book.slot);
+           // step 6: select those slots that are not in bookedSlots
+           const available = service.slots.filter(slot => !bookedSlots.includes(slot));
+           // step 7: set available to slots to make it easier
+           service.soots = available;
+
+        })
+        res.send(services)
+    })
+
     app.post("/booking", async (req, res) => {
       const booking = req.body;
       const query = {
