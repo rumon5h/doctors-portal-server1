@@ -18,9 +18,8 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     client.connect();
-    const serviceCollection = client
-      .db("doctors_portal")
-      .collection("services");
+    const serviceCollection = client.db("doctors_portal").collection("services");
+
     const bookingCollection = client.db("doctors_portal").collection("booking");
 
     app.get("/services", async (req, res) => {
@@ -30,31 +29,30 @@ async function run() {
       res.send(services);
     });
 
-    app.get('/available', async (req, res) => {
-        
-        const date = req.query.date;
-        // step 1: get all the bookings
-        const services = await serviceCollection.find().toArray()
+    app.get("/available", async (req, res) => {
+      const date = req.query.date;
+      // step 1: get all the bookings
+      const services = await serviceCollection.find().toArray();
 
-        // step 2 : get the booking of the day
-        // const query = {data : req.query.data || 'Oct 31, 2022'}
+      // step 2 : get the booking of the day
+      // const query = {data : req.query.data || 'Oct 31, 2022'}
 
-        const bookings = await bookingCollection.find({date}).toArray(); 
+      const bookings = await bookingCollection.find({ date }).toArray();
 
-        // step 3: for each service
-        services.forEach(service => {
-            // step 4: find the booking for that service
-            const serviceBooking = bookings.filter(book => book.treatment === service.name)
-            // step 5: Select slots for the service bookings
-           const bookedSlots = serviceBooking.map(book => book.slot);
-           // step 6: select those slots that are not in bookedSlots
-           const available = service.slots.filter(slot => !bookedSlots.includes(slot));
-           // step 7: set available to slots to make it easier
-           service.soots = available;
+      // step 3: for each service
+      services.forEach((service) => {
 
-        })
-        res.send(services)
-    })
+        // step 4: find the booking for that service
+        const serviceBookings = bookings.filter(
+          (book) => book.treatment === service.name
+        );
+        const booked = serviceBookings.map(s => s.slot);
+
+        const available = service.slots.filter(s => !booked.includes(s));
+        service.slots = available;
+      });
+      res.send(services);
+    });
 
     app.post("/booking", async (req, res) => {
       const booking = req.body;
@@ -64,23 +62,23 @@ async function run() {
         patientName: booking.patientName,
       };
       const exists = await bookingCollection.findOne(query);
-      if(exists){
-        return res.send({success: false, booking: exists})
+      if (exists) {
+        return res.send({ success: false, booking: exists });
       }
-      const result = await bookingCollection.insertOne(booking)
-      return res.send({success: true, booking:  result});
-
+      const result = await bookingCollection.insertOne(booking);
+      return res.send({ success: true, booking: result });
     });
   } finally {
+    //
   }
 }
 
 run().catch(console.dir());
 
 app.get("/", (req, res) => {
-  res.send("Hello Doctors portal");
+  res.send("Hello world!");
 });
 
 app.listen(port, () => {
-  console.log("Listening from port", port);
+  console.log("Server is Listening on port", port);
 });
