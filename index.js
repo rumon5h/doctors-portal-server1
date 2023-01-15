@@ -18,9 +18,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     client.connect();
-    const serviceCollection = client.db("doctors_portal").collection("services");
 
+    const serviceCollection = client.db("doctors_portal").collection("services");
     const bookingCollection = client.db("doctors_portal").collection("booking");
+    const userCollection = client.db("doctors_portal").collection("users");
+
+
 
     app.get("/services", async (req, res) => {
       const query = {};
@@ -28,6 +31,20 @@ async function run() {
       const services = await cursor.toArray();
       res.send(services);
     });
+
+    app.put('/user/:email', async (req, res) => {
+      const user = req.body;
+      const email = req.params.email;
+      const filter = { email: email};
+      const options = {upsert: true};
+
+      const updatedDoc = {
+        $set: user
+      }
+
+      const result = await userCollection.updateOne(filter, updatedDoc, options);
+      res.send(result);
+    })
 
     app.get("/available", async (req, res) => {
       const date = req.query.date;
