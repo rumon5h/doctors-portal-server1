@@ -49,6 +49,12 @@ async function run() {
       res.send(services);
     });
 
+    app.get('/users',verifyJWT, async (req, res) => {
+      const users = await userCollection.find().toArray();
+
+      res.send(users);
+    })
+
     app.put("/user/:email", async (req, res) => {
       const user = req.body;
       const email = req.params.email;
