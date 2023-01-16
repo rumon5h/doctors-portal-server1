@@ -49,11 +49,11 @@ async function run() {
       res.send(services);
     });
 
-    app.get('/users',verifyJWT, async (req, res) => {
+    app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
 
       res.send(users);
-    })
+    });
 
     app.put("/user/:email", async (req, res) => {
       const user = req.body;
@@ -76,6 +76,19 @@ async function run() {
         { expiresIn: "1h" }
       );
       res.send({ result, token });
+    });
+
+    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+
+      const updatedDoc = {
+        $set: { role: "admin" },
+      };
+
+      const result = await userCollection.updateOne(filter, updatedDoc);
+
+      res.send({ result });
     });
 
     app.get("/available", async (req, res) => {
@@ -110,9 +123,9 @@ async function run() {
         const query = { patientEmail: patient };
         const booking = await bookingCollection.find(query).toArray();
 
-        return  res.send(booking);
-      }else{
-        return res.status(403).send({message: 'forbidden access.'}); 
+        return res.send(booking);
+      } else {
+        return res.status(403).send({ message: "forbidden access." });
       }
     });
 
