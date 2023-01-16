@@ -4,6 +4,7 @@ require("dotenv").config();
 const port = process.env.local || 5000;
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
+const jwt = require("jsonwebtoken");
 
 app.use(cors());
 app.use(express.json());
@@ -43,7 +44,8 @@ async function run() {
       }
 
       const result = await userCollection.updateOne(filter, updatedDoc, options);
-      res.send(result);
+      const token = jwt.sign({email: email}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
+      res.send({result, token});
     })
 
     app.get("/available", async (req, res) => {
